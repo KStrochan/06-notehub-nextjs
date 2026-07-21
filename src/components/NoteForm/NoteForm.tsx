@@ -1,9 +1,11 @@
+'use client';
+
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import type { NoteTag } from '../../types/note';
-import { createNote } from '../../services/noteService';
+import type { NoteTag } from '@/types/note';
+import { createNote } from '@/lib/api/api';
 import css from './NoteForm.module.css';
 
 interface NoteFormProps {
@@ -18,29 +20,27 @@ interface FormValues {
 
 const NoteSchema = Yup.object().shape({
   title: Yup.string()
-    .min(3, 'Мінімум 3 символи')
-    .max(50, 'Максимум 50 символів')
-    .required("Обов'язкове поле"),
-  content: Yup.string()
-    .max(500, 'Максимум 500 символів'),
+    .min(3, 'Minimum 3 characters')
+    .max(50, 'Maximum 50 characters')
+    .required('Title is required'),
+  content: Yup.string().max(500, 'Maximum 500 characters'),
   tag: Yup.string()
-    .oneOf(['Todo', 'Work', 'Personal', 'Meeting', 'Shopping'] as const, 'Некоректний тег')
-    .required("Обов'язкове поле"),
+    .oneOf(['Todo', 'Work', 'Personal', 'Important'])
+    .required('Tag is required'),
 });
 
 export default function NoteForm({ onCancel }: NoteFormProps) {
   const queryClient = useQueryClient();
 
-  // Переносимо мутацію створення сюди, як просить ментор
   const createMutation = useMutation({
     mutationFn: createNote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
-      toast.success('Нотатку успішно створено!');
-      onCancel(); // Автоматичне закриття форми після успіху
+      toast.success('Note created successfully');
+      onCancel();
     },
     onError: () => {
-      toast.error('Не вдалося створити нотатку.');
+      toast.error('Failed to create note');
     },
   });
 
@@ -54,7 +54,7 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
     <Formik
       initialValues={initialValues}
       validationSchema={NoteSchema}
-      onSubmit={(values) => {
+      onSubmit={values => {
         createMutation.mutate(values);
       }}
     >
@@ -67,7 +67,13 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
 
         <div className={css.formGroup}>
           <label htmlFor="content">Content</label>
-          <Field id="content" name="content" as="textarea" rows={8} className={css.textarea} />
+          <Field
+            id="content"
+            name="content"
+            as="textarea"
+            rows={8}
+            className={css.textarea}
+          />
           <ErrorMessage name="content" component="span" className={css.error} />
         </div>
 
@@ -77,8 +83,7 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
             <option value="Todo">Todo</option>
             <option value="Work">Work</option>
             <option value="Personal">Personal</option>
-            <option value="Meeting">Meeting</option>
-            <option value="Shopping">Shopping</option>
+            <option value="Important">Important</option>
           </Field>
           <ErrorMessage name="tag" component="span" className={css.error} />
         </div>
@@ -87,7 +92,11 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
           <button type="button" className={css.cancelButton} onClick={onCancel}>
             Cancel
           </button>
-          <button type="submit" className={css.submitButton} disabled={createMutation.isPending}>
+          <button
+            type="submit"
+            className={css.submitButton}
+            disabled={createMutation.isPending}
+          >
             {createMutation.isPending ? 'Creating...' : 'Create note'}
           </button>
         </div>
