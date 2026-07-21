@@ -24,9 +24,9 @@ const NoteSchema = Yup.object().shape({
     .max(50, 'Maximum 50 characters')
     .required('Title is required'),
   content: Yup.string().max(500, 'Maximum 500 characters'),
-  tag: Yup.string()
-    .oneOf(['Todo', 'Work', 'Personal', 'Important'])
-    .required('Tag is required'),
+tag: Yup.string()
+  .oneOf(['Todo', 'Work', 'Personal', 'Meeting', 'Shopping'])
+  .required('Tag is required'),
 });
 
 export default function NoteForm({ onCancel }: NoteFormProps) {
@@ -83,7 +83,8 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
             <option value="Todo">Todo</option>
             <option value="Work">Work</option>
             <option value="Personal">Personal</option>
-            <option value="Important">Important</option>
+            <option value="Meeting">Meeting</option>
+            <option value="Shopping">Shopping</option>
           </Field>
           <ErrorMessage name="tag" component="span" className={css.error} />
         </div>

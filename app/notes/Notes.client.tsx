@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import { fetchNotes } from '../../lib/api';
@@ -21,6 +21,7 @@ export default function NotesClient() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['notes', page, perPage, search, sortBy],
     queryFn: () => fetchNotes({ page, perPage, search, sortBy }),
+    placeholderData: keepPreviousData,
   });
 
   const handleSearchChange = useDebouncedCallback((value: string) => {
@@ -32,6 +33,7 @@ export default function NotesClient() {
     <main className={css.app}>
       <div className={css.toolbar}>
         <SearchBox onChange={handleSearchChange} />
+
         {data && data.totalPages > 1 && (
           <Pagination
             pageCount={data.totalPages}
@@ -39,6 +41,7 @@ export default function NotesClient() {
             onPageChange={setPage}
           />
         )}
+
         <button
           type="button"
           className={css.button}
@@ -52,9 +55,11 @@ export default function NotesClient() {
       {isError && <p>Something went wrong.</p>}
       {data && <NoteList notes={data.notes} />}
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <NoteForm onCancel={() => setIsModalOpen(false)} />
-      </Modal>
+      {isModalOpen && (
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+          <NoteForm onCancel={() => setIsModalOpen(false)} />
+        </Modal>
+      )}
     </main>
   );
 }
