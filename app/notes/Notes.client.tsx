@@ -2,36 +2,59 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
 import { fetchNotes } from '../../lib/api/api';
-// Імпортуй свої компоненти
-// import NoteList from '../../components/NoteList/NoteList';
-// import NoteForm from '../../components/NoteForm/NoteForm';
-// import SearchBar from '../../components/SearchBar/SearchBar';
-// import css from './Notes.module.css'; // Не забудь завантажити стилі з репозиторію GoIT!
+import NoteList from '../../components/NoteList/NoteList';
+import NoteForm from '../../components/NoteForm/NoteForm';
+import SearchBox from '../../components/SearchBox/SearchBox';
+import Pagination from '../../components/Pagination/Pagination';
+import Modal from '../../components/Modal/Modal';
+import css from '../../components/NotesPage/NotesPage.module.css';
 
 export default function NotesClient() {
-  // Твої стани для пагінації, пошуку та сортування
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
+  const [perPage] = useState(10);
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<'created' | 'updated'>('created');
+  const [sortBy] = useState<'created' | 'updated'>('created');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Використовуємо useQuery. 
-  // Дані вже будуть на місці завдяки HydrationBoundary з page.tsx
   const { data, isLoading, isError } = useQuery({
     queryKey: ['notes', page, perPage, search, sortBy],
     queryFn: () => fetchNotes({ page, perPage, search, sortBy }),
   });
 
-  // Логіка з твого старого App.tsx для рендеру
+  const handleSearchChange = useDebouncedCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, 500);
+
   return (
-    <main>
-      <div>
-        {/* Сюди вставляєш свої SearchBar, NoteForm, NoteList та пагінацію */}
-        {/* <NoteForm /> */}
-        {/* <SearchBar /> */}
-        {/* <NoteList notes={data?.notes || []} /> */}
+    <main className={css.app}>
+      <div className={css.toolbar}>
+        <SearchBox onChange={handleSearchChange} />
+        {data && data.totalPages > 1 && (
+          <Pagination
+            pageCount={data.totalPages}
+            currentPage={page}
+            onPageChange={setPage}
+          />
+        )}
+        <button
+          type="button"
+          className={css.button}
+          onClick={() => setIsModalOpen(true)}
+        >
+          Create note +
+        </button>
       </div>
+
+      {isLoading && <p>Loading, please wait...</p>}
+      {isError && <p>Something went wrong.</p>}
+      {data && <NoteList notes={data.notes} />}
+
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <NoteForm onCancel={() => setIsModalOpen(false)} />
+      </Modal>
     </main>
   );
 }

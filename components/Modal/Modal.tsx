@@ -9,12 +9,15 @@ interface ModalProps {
 }
 
 // Отримуємо елемент модалки з дерева (створиться автоматично, якщо немає)
-const modalRoot = document.getElementById('modal-root') || (() => {
-  const div = document.createElement('div');
-  div.id = 'modal-root';
-  document.body.appendChild(div);
-  return div;
-})();
+function getModalRoot() {
+  let root = document.getElementById('modal-root');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'modal-root';
+    document.body.appendChild(root);
+  }
+  return root;
+}
 
 export default function Modal({ isOpen, onClose, children }: ModalProps) {
   // Закриття по Escape
@@ -57,6 +60,6 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
         {children}
       </div>
     </div>,
-    modalRoot
+    getModalRoot()
   );
 }
